@@ -10,15 +10,28 @@ jobs:
   cancel:
     runs-on: ubuntu-latest
     steps:
-      - name: Delete stuck Pages deployment records
+      - name: Clear stuck Pages deployment
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eu
-          for id in 7098367796 7098631535 7098699435 7098739598; do
-            echo "delete deployment $id"
-            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/deployments/${id}" || true
-          done
-          echo "cancel pages deployment 7d63a61"
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/pages/deployments/7d63a61d69a3bc490bd9fa93780112a22ad9f409/cancel" || true
-          gh api "repos/${GITHUB_REPOSITORY}/pages/deployments/7d63a61d69a3bc490bd9fa93780112a22ad9f409" || true
+          call() {
+            method="$1"
+            path="$2"
+            echo "=== $method $path ==="
+            code=$(curl -sS -o /tmp/body -w '%{http_code}' -X "$method" \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              -H "Content-Type: application/json" \
+              -d "${3:-{}}" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}${path}")
+            echo "http:${code}"
+            cat /tmp/body
+            echo
+          }
+          call PUT /pages/deployment/cancel/7d63a61d69a3bc490bd9fa93780112a22ad9f409
+          call POST /pages/deployments/7d63a61d69a3bc490bd9fa93780112a22ad9f409/cancel
+          call GET /pages/deployments/7d63a61d69a3bc490bd9fa93780112a22ad9f409
+          call DELETE /deployments/7098785237
+          call POST /pages/builds
