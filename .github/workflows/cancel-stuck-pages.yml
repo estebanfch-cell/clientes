@@ -1,0 +1,19 @@
+name: cancel stuck pages deployment
+on:
+  push:
+    paths:
+      - .github/workflows/cancel-stuck-pages.yml
+permissions:
+  pages: write
+jobs:
+  cancel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel stuck Pages deployment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          id=7d63a61d69a3bc490bd9fa93780112a22ad9f409
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/pages/deployments/${id}/cancel" || true
+          gh api "repos/${GITHUB_REPOSITORY}/pages/deployments/${id}"
