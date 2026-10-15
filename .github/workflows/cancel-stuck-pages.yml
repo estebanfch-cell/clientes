@@ -5,12 +5,11 @@ on:
       - .github/workflows/cancel-stuck-pages.yml
 permissions:
   pages: write
-  deployments: write
 jobs:
   cancel:
     runs-on: ubuntu-latest
     steps:
-      - name: Clear stuck Pages deployment
+      - name: Cancel the stuck Pages build
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -27,11 +26,12 @@ jobs:
               -d "${3:-{}}" \
               "https://api.github.com/repos/${GITHUB_REPOSITORY}${path}")
             echo "http:${code}"
-            cat /tmp/body
+            cat /tmp/body || true
             echo
           }
+          call DELETE /pages/builds/1287320071
+          call POST /pages/builds/1287320071/cancel
+          call PUT /pages/deployment/cancel/f28dea8a222bd41c6b96d58d3a198862cf34bf8d
+          call POST /pages/deployments/f28dea8a222bd41c6b96d58d3a198862cf34bf8d/cancel
           call PUT /pages/deployment/cancel/7d63a61d69a3bc490bd9fa93780112a22ad9f409
-          call POST /pages/deployments/7d63a61d69a3bc490bd9fa93780112a22ad9f409/cancel
-          call GET /pages/deployments/7d63a61d69a3bc490bd9fa93780112a22ad9f409
-          call DELETE /deployments/7098785237
-          call POST /pages/builds
+          call GET /pages/builds/latest
