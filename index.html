@@ -246,7 +246,11 @@ textarea{min-height:84px;resize:vertical}
 </div>
 
 <script>
-var API='https://script.google.com/macros/s/AKfycbyfoS1EX0V9YdqN35jiJ7CDMkxpkX5Gd0XQZJxQAxTiM76vjAoVXyEam2Vzo_WNihZQ/exec';
+var API='https://bklbvwpkrdaojbezljsd.supabase.co/functions/v1/portal-api'; // directo a Supabase (sin Apps Script)
+var KYC_C=(new URLSearchParams(location.search).get('c')||'').replace(/[^a-zA-Z0-9]/g,'').slice(0,64);
+if(KYC_C){fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'kyc_get',c:KYC_C})}).then(function(r){return r.json();}).then(function(x){
+  if(!x||!x.ok)return;var fm=document.getElementById('f');function put(n,v){var e=fm&&fm.querySelector('[name="'+n+'"]');if(e&&!e.value&&v)e.value=v;}
+  put('empresa',x.empresa);put('ruc',x.ruc);put('telefonoEmpresa',x.telefono);}).catch(function(){});}
 
 // Broca lateral sigue el scroll
 function prog(){
@@ -311,7 +315,7 @@ document.getElementById('f').addEventListener('submit',function(ev){
   ev.preventDefault();
   var f=ev.target, err=document.getElementById('err'), btn=document.getElementById('btn');
   err.style.display='none';
-  var d={action:'kycSubmit'};
+  var d={action:'kyc_submit'};if(KYC_C)d.c=KYC_C;
   new FormData(f).forEach(function(v,k){d[k]=v;});
   d.credAutoriza=document.getElementById('cred-aut')&&document.getElementById('cred-aut').checked?'SI':'NO';
   var auts=[];
